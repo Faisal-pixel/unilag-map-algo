@@ -1,186 +1,180 @@
-"use client";
-import Map from "@/components/Map";
-import axios from "axios";
+"use client"
+
 import { useState } from "react";
 
-interface Graph {
-  [key: string]: {
-    [key: string]: number; // Adjacent node and distance
-  };
-}
-
-class PriorityQueue {
-  private elements: { node: string; priority: number }[] = [];
-
-  enqueue(node: string, priority: number) {
-    this.elements.push({ node, priority });
-    this.elements.sort((a, b) => a.priority - b.priority);
-  }
-
-  dequeue() {
-    return this.elements.shift();
-  }
-
-  isEmpty() {
-    return this.elements.length === 0;
-  }
-}
-
 export default function MapPage() {
-  // States for user inputs
-  const [startLocation, setStartLocation] = useState<string>("");
-  const [endLocation, setEndLocation] = useState<string>("");
 
-  // States for coordinates
-  const [startCoords, setStartCoords] = useState<[number, number] | null>(null);
-  const [endCoords, setEndCoords] = useState<[number, number] | null>(null);
+    const [currentLocation, setCurrentLocation] = useState<string>('')
+    const [destination, setDestination] = useState<string>('')
 
-  // Function to get coordinates using Google Maps Geocoding API
-  const getCoordinates = async (address: string) => {
-    const API_KEY = "AIzaSyAKk3hlTbzWVJfDM8xOlHd-OreQgA_fwNk"; // Replace with your Google Maps API key
-    try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          address
-        )}&key=${API_KEY}`
-      );
-      const { lat, lng } = response.data.results[0].geometry.location;
-      return [lat, lng];
-    } catch (error) {
-      console.error("Error fetching coordinates:", error);
-      return null;
-    }
-  };
+    const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
+    const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([]);
 
-  // Handle form submission to set markers
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (startLocation) {
-      const startCoords = await getCoordinates(startLocation);
-      setStartCoords(startCoords as [number, number]);
-    }
-    if (endLocation) {
-      const endCoords = await getCoordinates(endLocation);
-      setEndCoords(endCoords as [number, number]);
-    }
-  };
 
-  //------------------------------------------------------- LAST CODE UP THERE---------------------------------------------//
+    const location = [
+        "Unilag First gate",
+        "Unilag Back Gate",
 
-  const toRadians = (degrees: number): number => degrees * (Math.PI / 180);
+        "First Bank",
+        "Access Bank",
+        "Wema Bank",
+        "Eco Bank",
+        "Gauranty Trust Bank, GTB",
+        "Zenith Bank",
+        "United Bank For Africa, UBA",
 
-  const haversineDistance = (
-    coord1: [number, number],
-    coord2: [number, number]
-  ): number => {
-    const R = 6371e3; // Earth radius in meters
-    const lat1 = toRadians(coord1[0]);
-    const lat2 = toRadians(coord2[0]);
-    const deltaLat = toRadians(coord2[0] - coord1[0]);
-    const deltaLon = toRadians(coord2[1] - coord1[1]);
+        "Chapel of Christ Our Light, Unilag",
+        "Unilag Central Mosque Complex",
 
-    const a =
-      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-      Math.cos(lat1) *
-        Math.cos(lat2) *
-        Math.sin(deltaLon / 2) *
-        Math.sin(deltaLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        "Campus Carpark",
+        "Gate Carpark",
+        "DLI Carpark",
+        "Education Carpark",
 
-    return R * c; // Distance in meters
-  };
+        "International School, University of Lagos Secondary School(ISL)",
+        "University of Lagos Staff School",
+        "University of Lagos Women Society (Creche, Nursery and Primary School) ULWS",
+        "Unilag School Of Post Graduate Studies",
+        
+        "King Jaja Hall",
+        "Mariere Hall",
+        "Saburi Biobaku Hall",
+        "Eni Njoku Hall",
+        "Sodeinde Hall",
 
-  // Example usage:
-  // const distance = haversineDistance([6.515, 3.386], [6.516, 3.387]);
-  // console.log(`Distance: ${distance} meters`);
+        "Queen Moremi Hall",
+        "Fagunwa Hall",
+        "Madam Tinub Hall, MTH",
+        "El kanemi Hall",
+        "Kofo Ademola Hall",
+        "Honours Hall",
+        "Queen Amina Hall",
+        "Makama-Bida Hall",
+        "Unilag Women Society (ULWS) Female Hostel",
 
-  const dijkstra = (graph: Graph, startNode: string) => {
-    const distances: { [key: string]: number } = {};
-    const prev: { [key: string]: string | null } = {};
-    const queue = new PriorityQueue();
+        "Senate Building",
+        "New Hall",
+        "Distance Learning Institute, DLI",
+        "Amphi Theatre",
+        "Bookshop",
+        "Guest House",
+        "Logoon Front",
+        "Unilag Health/Medical Center",
+        "Sport Center",
+        "CITS",
+        "NORD Unilag",
+        "NITHUB",
+        "Unilag Alumni Jubilee House Park",
 
-    // Initialize distances and previous nodes
-    for (const node in graph) {
-      distances[node] = node === startNode ? 0 : Infinity;
-      prev[node] = null;
-      queue.enqueue(node, distances[node]);
-    }
+        "Afe Babalola Hall",
+        "Jelili Adebisi Omotola Hall (UNILAG Multi-Purpose Hall)",
+        "Julius Berger Hall",
+        "Tolulope Odugbemi Hall (UNILAG Staff School Hall)",
+        "Unilag Main Auditorium",
+        "New Engineering Building NEB",
+        "Unilag Engineering Lecture Theatre, ELT",
 
-    while (!queue.isEmpty()) {
-      const currentNode = queue.dequeue()?.node;
+        "Faculty of Science",
+        "Faculty of Education",
+        "Faculty of Social Sciences",
+        "Faculty of Management Science",
+        "Faculty of Law",
+        "Faculty of Environmental Science",
+        "Faculty of Engineering",
+        "Faculty of Art",
 
-      if (currentNode && distances[currentNode] !== Infinity) {
-        for (const neighbor in graph[currentNode]) {
-          const newDist = distances[currentNode] + graph[currentNode][neighbor];
-          if (newDist < distances[neighbor]) {
-            distances[neighbor] = newDist;
-            prev[neighbor] = currentNode;
-            queue.enqueue(neighbor, newDist);
+        "Main Library",
+        "Education Library",
+    ]
+
+    const handleInput = (value: string, setType: 'current' | 'destination') => {
+        const filteredSuggestions = location.filter(location =>
+            location.toLowerCase().includes(value.toLowerCase())
+        );
+
+        if (setType === 'current') {
+            setCurrentLocation(value);
+            setCurrentSuggestions(filteredSuggestions); 
+            setDestinationSuggestions([]);
           }
+        else {
+            setDestination(value);
+            setDestinationSuggestions(filteredSuggestions);
+            setCurrentSuggestions([]);
         }
-      }
+          
     }
 
-    return { distances, prev };
-  };
+    return (
+      <div className="map-page flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-[130px] pb-8">
+        
+        <div className="bg-gray-800 bg-opacity-70 p-8 rounded-lg shadow-lg mb-6 w-[90%] max-w-xl">
+            <h1 className="text-2xl text-white font-semibold mb-4">Find Your Route</h1>
+            <div className="mb-4 relative">
+                <label className="block text-gray-300 mb-1">Current Location:</label>
+                <input 
+                type="text" 
+                className="w-full p-2 rounded border border-gray-500" 
+                placeholder="Enter your current location" 
+                value={currentLocation}
+                onChange={(e) => handleInput(e.target.value, 'current')}
+                />
+                
+                {currentLocation && currentSuggestions.length > 0 && (
+                    <ul className="absolute bg-white w-full text-gray-900 mt-1 rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                        {currentSuggestions.map((suggestion, index) => (
+                            <li
+                                key={index}
+                                onClick={() => {
+                                    setCurrentLocation(suggestion);
+                                    setCurrentSuggestions([]); 
+                                }}
+                                className="p-2 hover:bg-gray-200 cursor-pointer">
+                                {suggestion}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
 
-  const unilagGraph: Graph = {
-    "Faculty of Engineering": {
-      "Faculty of Science": haversineDistance([6.516, 3.387], [6.52, 3.391]),
-      "Main Auditorium": haversineDistance([6.516, 3.387], [6.517, 3.387]),
-    },
-    "Faculty of Science": {
-      "Faculty of Engineering": haversineDistance(
-        [6.52, 3.391],
-        [6.516, 3.387]
-      ),
-      "Senate Building": haversineDistance([6.52, 3.391], [6.515, 3.386]),
-    },
-    // Continue defining other landmarks...
-  };
 
-  const result = dijkstra(unilagGraph, "Faculty of Engineering");
-  console.log(result);
+            <div className="relative">
+                <label className="block text-gray-300 mb-1">Destination:</label>
+                <input 
+                    type="text" 
+                    className="w-full p-2 rounded border border-gray-500" 
+                    placeholder="Enter your destination" 
+                    value={destination}
+                    onChange={(e) => handleInput(e.target.value, 'destination')}
+                />
 
-  return (
-    <div className="map-page flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-[130px] pb-8">
-      <div className="bg-gray-800 bg-opacity-70 p-8 rounded-lg shadow-lg mb-6 w-[90%] max-w-xl">
-        <h1 className="text-2xl text-white font-semibold mb-4">
-          Find Your Route
-        </h1>
-        <div className="mb-4">
-          <label className="block text-gray-300 mb-1">Current Location:</label>
-          <input
-            type="text"
-            className="w-full p-2 rounded border border-gray-500"
-            placeholder="Enter your current location"
-            onChange={(e) => setStartLocation(e.target.value)}
-          />
+                {destination && destinationSuggestions.length > 0 && (
+                    <ul className="absolute bg-white text-gray-900 w-full mt-1 rounded shadow-lg z-10 max-h-40 overflow-y-auto">
+                    {destinationSuggestions.map((suggestion, index) => (
+                        <li
+                        key={index}
+                        onClick={() => {
+                            setDestination(suggestion);
+                            setDestinationSuggestions([]);
+                        }}
+                        className="p-2 hover:bg-gray-200 cursor-pointer">
+                        {suggestion}
+                        </li>
+                    ))}
+                    </ul>
+                )}
+            </div>
+
+
+            <button className="mt-4 w-full bg-orange-500 text-white font-semibold rounded-lg p-2 hover:bg-orange-600 transition duration-300 ease-in-out">
+                Find Route
+            </button>
         </div>
-        <div>
-          <label className="block text-gray-300 mb-1">Destination:</label>
-          <input
-            type="text"
-            className="w-full p-2 rounded border border-gray-500"
-            placeholder="Enter your destination"
-            onChange={(e) => setEndLocation(e.target.value)}
-          />
+  
+        {/* Map Section */}
+        <div className="w-[90%] max-w-xl h-96 bg-gray-300 rounded-lg">
+          <p className="text-center text-gray-500 pt-10">Map will be displayed here</p>
         </div>
-        <button
-          onClick={handleSubmit}
-          className="mt-4 w-full bg-orange-500 text-white font-semibold rounded-lg p-2 hover:bg-orange-600 transition duration-300 ease-in-out"
-        >
-          Find Route
-        </button>
       </div>
-
-      {/* Map Section */}
-      <div className="w-[90%] max-w-xl h-96 bg-gray-300 rounded-lg">
-        <p className="text-center text-gray-500 pt-10">
-          Map will be displayed here
-        </p>
-        <Map startCoords={startCoords} endCoords={endCoords} />
-      </div>
-    </div>
-  );
-}
+    );
+  }
