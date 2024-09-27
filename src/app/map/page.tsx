@@ -2,6 +2,29 @@
 
 import { useEffect, useState } from "react";
 
+interface Graph {
+  [key: string]: {
+    [key: string]: number; // Adjacent node and distance
+  };
+}
+
+class PriorityQueue {
+  private elements: { node: string; priority: number }[] = [];
+
+  enqueue(node: string, priority: number) {
+    this.elements.push({ node, priority });
+    this.elements.sort((a, b) => a.priority - b.priority);
+  }
+
+  dequeue() {
+    return this.elements.shift();
+  }
+
+  isEmpty() {
+    return this.elements.length === 0;
+  }
+}
+
 const location = [
   "Unilag First gate",
   "Unilag Second Gate (Back Gate)",
