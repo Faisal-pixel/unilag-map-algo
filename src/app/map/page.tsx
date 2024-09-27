@@ -406,6 +406,55 @@ export default function MapPage() {
     return R * c; // Distance in meters
   },[toRadians]);
 
+  const dijkstra = (graph: Graph, startNode: string) => {
+    const distances: { [key: string]: number } = {};
+    const prev: { [key: string]: string | null } = {};
+    const queue = new PriorityQueue();
+
+    // Initialize distances and previous nodes
+    for (const node in graph) {
+      distances[node] = node === startNode ? 0 : Infinity;
+      prev[node] = null;
+      queue.enqueue(node, distances[node]);
+    }
+
+    while (!queue.isEmpty()) {
+      const currentNode = queue.dequeue()?.node;
+
+      if (currentNode && distances[currentNode] !== Infinity) {
+        for (const neighbor in graph[currentNode]) {
+          const newDist = distances[currentNode] + graph[currentNode][neighbor];
+          if (newDist < distances[neighbor]) {
+            distances[neighbor] = newDist;
+            prev[neighbor] = currentNode;
+            queue.enqueue(neighbor, newDist);
+          }
+        }
+      }
+    }
+
+    return { distances, prev };
+  };
+
+
+  const unilagGraph: Graph = {
+    "Faculty of Engineering": {
+      "Faculty of Science": haversineDistance([6.516, 3.387], [6.52, 3.391]),
+      "Main Auditorium": haversineDistance([6.516, 3.387], [6.517, 3.387]),
+    },
+    "Faculty of Science": {
+      "Faculty of Engineering": haversineDistance(
+        [6.52, 3.391],
+        [6.516, 3.387]
+      ),
+      "Senate Building": haversineDistance([6.52, 3.391], [6.515, 3.386]),
+    },
+    // Continue defining other landmarks...
+  };
+
+  const result = dijkstra(unilagGraph, "Faculty of Engineering");
+  console.log(result);
+
   useEffect(() => {
     console.log(currentLocation);
     console.log('destination', destination);
