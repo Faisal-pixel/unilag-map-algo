@@ -1,5 +1,6 @@
 "use client";
 
+import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 
 interface Graph {
@@ -540,6 +541,7 @@ export default function MapPage() {
         <p className="text-center text-gray-500 pt-10">
           Map will be displayed here
         </p>
+        <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } />
       </div>
     </div>
   );
