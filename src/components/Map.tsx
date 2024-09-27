@@ -5,12 +5,14 @@ import {
   TileLayer,
   Marker,
   Popup,
+  Polyline,
 } from "react-leaflet";
 import L from "leaflet";
 
 // Importing leaflet CSS in the component to ensure it's applied
 import "leaflet/dist/leaflet.css";
 import "tailwindcss/tailwind.css";
+import locationCord from "@/data/locationCoord";
 
 // Fix for default marker icon issue in Leaflet + React
 L.Icon.Default.mergeOptions({
@@ -51,9 +53,10 @@ L.Icon.Default.mergeOptions({
 type LocationMarkerProps = {
     startCoords: [number, number] | null
     endCoords: [number, number] | null
+    path: string[]
 }
 
-const Map = ({startCoords, endCoords}: LocationMarkerProps) => {
+const Map = ({startCoords, endCoords, path}: LocationMarkerProps) => {
 //   const [startLocation, setStartLocation] = useState<[number, number] | null>(
 //     null
 //   );
@@ -61,6 +64,11 @@ const Map = ({startCoords, endCoords}: LocationMarkerProps) => {
 //   const [selectionState, setSelectionState] = useState<"start" | "end">(
 //     "start"
 //   );
+
+const markers = path.map((nodeName) => {
+    const coord = locationCord.find(location => location.name === nodeName)?.coordinate;
+    return coord ? L.latLng(coord[0], coord[1]) : null;
+  }).filter((coord): coord is L.LatLng => coord !== null);
   return (
     <div className="h-full">
       <MapContainer
@@ -93,7 +101,7 @@ const Map = ({startCoords, endCoords}: LocationMarkerProps) => {
             <Popup>End Location</Popup>
           </Marker>
         )}
-
+        {markers.length > 1 && <Polyline positions={markers} color="blue" />}
         {/* <Marker position={[6.515, 3.386]}>
           <Popup>
             University of Lagos <br /> Main Campus.

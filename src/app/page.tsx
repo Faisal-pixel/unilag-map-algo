@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="main">
 
-      <div className="content h-screen min-h-screen bg-cover bg-center text-white relative pt-[100px] ml-full flex flex-col items-center justify-center">
+      <div className="content h-screen min-h-screen over bg-cover bg-center text-white relative pt-[100px] ml-full flex flex-col items-center justify-center">
         <h1 className="text-[50px] pl-[20px] tracking-wider font-semibold opacity-0 translate-y-10 animate-fade-in">
           WELCOME <br/>To <br/>
           <span className="text-orange-500 text-[60px]">UniPATH</span>

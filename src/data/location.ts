@@ -1,0 +1,76 @@
+const location = [
+    "Unilag First gate",
+    "Unilag Second Gate (Back Gate)",
+  
+    "First Bank",
+    "Access Bank",
+    "Wema Bank",
+    "Eco Bank",
+    "Gauranty Trust Bank, GTB",
+    "Zenith Bank",
+    "United Bank For Africa, UBA",
+  
+    "Chapel of Christ Our Light, Unilag",
+    "Unilag Central Mosque Complex",
+  
+    "Campus Carpark",
+    "Gate Carpark",
+    "DLI Carpark",
+    "Education Carpark",
+  
+    "International School, University of Lagos Secondary School(ISL)",
+    "University of Lagos Staff School",
+    "University of Lagos Women Society (Creche, Nursery and Primary School) ULWS",
+    "Unilag School Of Post Graduate Studies",
+  
+    "King Jaja Hall",
+    "Mariere Hall",
+    "Saburi Biobaku Hall",
+    "Eni Njoku Hall",
+    "Sodeinde Hall",
+  
+    "Queen Moremi Hall",
+    "Fagunwa Hall",
+    "Madam Tinub Hall, MTH",
+    "El kanemi Hall",
+    "Kofo Ademola Hall",
+    "Honours Hall",
+    "Queen Amina Hall",
+    "Makama-Bida Hall",
+    "Unilag Women Society (ULWS) Female Hostel",
+  
+    "Senate Building",
+    "New Hall",
+    "Distance Learning Institute, DLI",
+    "Amphi Theatre",
+    "Bookshop",
+    "Guest House",
+    "Lagoon Front",
+    "Unilag Health Center",
+    "Sport Center",
+    "CITS",
+    "NORD Unilag",
+    "NITHUB",
+    "Unilag Alumni Jubilee House Park",
+  
+    "Afe Babalola Hall",
+    "Jelili Adebisi Omotola Hall (UNILAG Multi-Purpose Hall)",
+    "Julius Berger Hall",
+    "Tolulope Odugbemi Hall (UNILAG Staff School Hall)",
+    "Unilag Main Auditorium",
+    "Unilag Engineering Lecture Theatre, ELT",
+  
+    "Faculty of Science",
+    "Faculty of Education",
+    "Faculty of Social Sciences",
+    "Faculty of Management Science",
+    "Faculty of Law",
+    "Faculty of Environmental Science",
+    "Faculty of Engineering",
+    "Faculty of Art",
+  
+    "Main Library",
+    "Education Library",
+  ];
+
+export default location;
