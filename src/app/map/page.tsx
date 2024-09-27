@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface Graph {
   [key: string]: {
@@ -381,6 +381,30 @@ export default function MapPage() {
       setCurrentSuggestions([]);
     }
   };
+
+
+  const toRadians = useCallback((degrees: number): number => degrees * (Math.PI / 180), []);
+
+  const haversineDistance = useCallback((
+    coord1: [number, number],
+    coord2: [number, number]
+  ): number => {
+    const R = 6371e3; // Earth radius in meters
+    const lat1 = toRadians(coord1[0]);
+    const lat2 = toRadians(coord2[0]);
+    const deltaLat = toRadians(coord2[0] - coord1[0]);
+    const deltaLon = toRadians(coord2[1] - coord1[1]);
+
+    const a =
+      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+      Math.cos(lat1) *
+        Math.cos(lat2) *
+        Math.sin(deltaLon / 2) *
+        Math.sin(deltaLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
+  },[toRadians]);
 
   useEffect(() => {
     console.log(currentLocation);
