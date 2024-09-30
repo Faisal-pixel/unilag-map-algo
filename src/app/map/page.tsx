@@ -4,6 +4,7 @@ import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 import locationCord from "@/data/locationCoord";
 import location from "@/data/location";
+import { handleKeyDown } from "@/utilities/handleKeyDown";
 
 interface Graph {
   [key: string]: {
@@ -51,17 +52,17 @@ export default function MapPage() {
   const [distance, setDistance] = useState<number | null>(null); // This distance state holds the total distance of the shortest path.
 
   const handleInput = (value: string, setType: "current" | "destination") => {
-    const filteredSuggestions = location.filter((location) =>
-      location.toLowerCase().includes(value.toLowerCase())
+    const filteredSuggestions = locationCord.filter((location) =>
+      location.name.toLowerCase().includes(value.toLowerCase())
     );
 
     if (setType === "current") {
       setCurrentLocation({ name: value, coordinate: [0, 0] });
-      setCurrentSuggestions(filteredSuggestions);
+      setCurrentSuggestions(filteredSuggestions.map(loc => loc.name));
       setDestinationSuggestions([]);
     } else {
       setDestination({ name: value, coordinate: [0, 0] });
-      setDestinationSuggestions(filteredSuggestions);
+      setDestinationSuggestions(filteredSuggestions.map(loc => loc.name));
       setCurrentSuggestions([]);
     }
   };
@@ -187,19 +188,24 @@ export default function MapPage() {
 
           {currentLocation && currentSuggestions.length > 0 && (
             <ul className="absolute bg-white w-full text-gray-900 mt-1 rounded shadow-lg z-10 max-h-40 overflow-y-auto">
-              {locationCord.map((suggestion, index) => (
+              {currentSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
                   onClick={() => {
-                    setCurrentLocation({
-                      name: suggestion.name,
-                      coordinate: [...suggestion.coordinate],
-                    });
-                    setCurrentSuggestions([]);
+                    const selectedLocation = locationCord.find(
+                      (loc) => loc.name === suggestion
+                    );
+                    if (selectedLocation) {
+                      setCurrentLocation({
+                        name: selectedLocation.name,
+                        coordinate: [...selectedLocation.coordinate],
+                      });
+                      setCurrentSuggestions([]);
+                    }
                   }}
                   className="p-2 hover:bg-gray-200 cursor-pointer"
                 >
-                  {suggestion.name}
+                  {suggestion}
                 </li>
               ))}
             </ul>
@@ -218,21 +224,24 @@ export default function MapPage() {
 
           {destination && destinationSuggestions.length > 0 && (
             <ul className="absolute bg-white text-gray-900 w-full mt-1 rounded shadow-lg z-10 max-h-40 overflow-y-auto">
-              {locationCord.map((suggestion, index) => (
+              {destinationSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
                   onClick={() => {
-                    setDestination(
-                      {
-                        name: suggestion.name,
-                      coordinate: [...suggestion.coordinate],
-                      }
+                    const selectedLocation = locationCord.find(
+                      (loc) => loc.name === suggestion
                     );
-                    setDestinationSuggestions([]);
+                    if (selectedLocation) {
+                      setDestination({
+                        name: selectedLocation.name,
+                        coordinate: [...selectedLocation.coordinate],
+                      })
+                      setDestinationSuggestions([])
+                    }
                   }}
                   className="p-2 hover:bg-gray-200 cursor-pointer"
                 >
-                  {suggestion.name}
+                  {suggestion}
                 </li>
               ))}
             </ul>
@@ -245,10 +254,7 @@ export default function MapPage() {
       </div>
 
       {/* Map Section */}
-      <div className="w-[90%] max-w-xl h-96 bg-gray-300 rounded-lg">
-        <p className="text-center text-gray-500 pt-10">
-          Map will be displayed here
-        </p>
+      <div className="w-[90%] max-w-xl h-96 rounded-lg">
         <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } path={path} />
       </div>
     </div>
