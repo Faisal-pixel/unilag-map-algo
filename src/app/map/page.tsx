@@ -112,6 +112,9 @@ export default function MapPage() {
 
     // Set the path and the total distance
     setPath(constructedPath);
+  console.log("result form dijstra", result);
+  console.log("current location", currentLocation);
+    console.log(constructedPath);
     setDistance(distances[destination.name]);
   };
 
@@ -147,9 +150,24 @@ export default function MapPage() {
 
 
   const unilagGraph: Graph = {
+    "Unilag First gate": {
+      "Faculty of Education": haversineDistance([6.518014936063271, 3.384798992138069], [6.51771772897192, 3.385542526211888]),
+      "Gate Carpark": haversineDistance([6.518014936063271, 3.384798992138069], [6.518113403528685, 3.3865495321438734])
+    },
+    "Faculty of Education": {
+      "Unilag First gate": haversineDistance([6.51771772897192, 3.385542526211888], [6.518014936063271, 3.384798992138069]),
+      "Faculty of Environmental Science": haversineDistance([6.51771772897192, 3.385542526211888], [6.51771772897192, 3.385542526211888]),
+      "El kanemi Hall": haversineDistance([6.51771772897192, 3.385542526211888], [6.516587189550492, 3.3843879197731037]),
+    },
+    "Faculty of Environmental Science": {
+      "Unilag First gate": haversineDistance([6.51771772897192, 3.385542526211888], [6.518014936063271, 3.384798992138069]),
+      "Sport Center": haversineDistance([6.51771772897192, 3.385542526211888], [6.517601770612466, 3.3866594628360507]),
+      "Faculty of Engineering": haversineDistance([6.51771772897192, 3.385542526211888], [6.5192100558079025, 3.399575844402204]),
+    },
     "Faculty of Engineering": {
       "Faculty of Science": haversineDistance([6.5192100558079025, 3.399575844402204], [6.5163106738877365, 3.3995329290560568]),
       "Main Auditorium": haversineDistance([6.5192100558079025, 3.399575844402204], [6.517, 3.387]),
+      "Faculty of Environmental Science": haversineDistance([6.5192100558079025, 3.399575844402204], [6.51771772897192, 3.385542526211888]),
     },
     "Faculty of Science": {
       "Faculty of Engineering": haversineDistance(
