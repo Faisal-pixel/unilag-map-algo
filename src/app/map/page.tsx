@@ -3,8 +3,7 @@
 import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 import locationCord from "@/data/locationCoord";
-import location from "@/data/location";
-import { handleKeyDown } from "@/utilities/handleKeyDown";
+import { handleKey } from "@/utilities/handleKeyDown";
 
 interface Graph {
   [key: string]: {
@@ -43,10 +42,9 @@ export default function MapPage() {
     coordinate: number[];
   }>({ name: "", coordinate: [0, 0] });
 
-  const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
-  const [destinationSuggestions, setDestinationSuggestions] = useState<
-    string[]
-  >([]);
+  const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([])
+  const [destinationSuggestions, setDestinationSuggestions] = useState<string[]>([])
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null)
 
   const [path, setPath] = useState<string[]>([]); // This path state holds the nodes in the shortest path.
   const [distance, setDistance] = useState<number | null>(null); // This distance state holds the total distance of the shortest path.
@@ -60,12 +58,14 @@ export default function MapPage() {
       setCurrentLocation({ name: value, coordinate: [0, 0] });
       setCurrentSuggestions(filteredSuggestions.map(loc => loc.name));
       setDestinationSuggestions([]);
-    } else {
+    }
+    else {
       setDestination({ name: value, coordinate: [0, 0] });
       setDestinationSuggestions(filteredSuggestions.map(loc => loc.name));
       setCurrentSuggestions([]);
     }
   };
+
 
 
   const toRadians = useCallback((degrees: number): number => degrees * (Math.PI / 180), []);
@@ -202,6 +202,20 @@ export default function MapPage() {
             placeholder="Enter your current location"
             value={currentLocation.name}
             onChange={(e) => handleInput(e.target.value, "current")}
+            onKeyDown={(e) =>
+              handleKey(
+                e,
+                "current",
+                currentSuggestions,
+                destinationSuggestions,
+                highlightedIndex,
+                setHighlightedIndex,
+                setCurrentLocation,
+                setDestination,
+                setCurrentSuggestions,
+                setDestinationSuggestions
+              )
+            }
           />
 
           {currentLocation && currentSuggestions.length > 0 && (
@@ -209,6 +223,14 @@ export default function MapPage() {
               {currentSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
+                  ref={(el) => {
+                    if (highlightedIndex === index && el) {
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      });
+                    }
+                  }}
                   onClick={() => {
                     const selectedLocation = locationCord.find(
                       (loc) => loc.name === suggestion
@@ -221,7 +243,7 @@ export default function MapPage() {
                       setCurrentSuggestions([]);
                     }
                   }}
-                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  className={`p-2 hover:bg-gray-200 cursor-pointer ${highlightedIndex === index ? "bg-gray-300" : ""}`}
                 >
                   {suggestion}
                 </li>
@@ -238,6 +260,20 @@ export default function MapPage() {
             placeholder="Enter your destination"
             value={destination.name}
             onChange={(e) => handleInput(e.target.value, "destination")}
+            onKeyDown={(e) =>
+              handleKey(
+                e,
+                "destination",
+                currentSuggestions,
+                destinationSuggestions,
+                highlightedIndex,
+                setHighlightedIndex,
+                setCurrentLocation,
+                setDestination,
+                setCurrentSuggestions,
+                setDestinationSuggestions
+              )
+            }
           />
 
           {destination && destinationSuggestions.length > 0 && (
@@ -245,6 +281,14 @@ export default function MapPage() {
               {destinationSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
+                  ref={(el) => {
+                    if (highlightedIndex === index && el) {
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      });
+                    }
+                  }}
                   onClick={() => {
                     const selectedLocation = locationCord.find(
                       (loc) => loc.name === suggestion
@@ -257,7 +301,7 @@ export default function MapPage() {
                       setDestinationSuggestions([])
                     }
                   }}
-                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  className={`p-2 hover:bg-gray-200 cursor-pointer ${highlightedIndex === index ? "bg-gray-300" : ""}`}
                 >
                   {suggestion}
                 </li>
@@ -272,7 +316,7 @@ export default function MapPage() {
       </div>
 
       {/* Map Section */}
-      <div className="w-[90%] max-w-xl h-96 rounded-lg">
+      <div className="w-[90%] max-w-xl h-96 rounded-lg mt-20">
         <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } path={path} />
       </div>
     </div>
