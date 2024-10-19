@@ -3,8 +3,8 @@
 import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 import locationCord from "@/data/locationCoord";
-import location from "@/data/location";
-import { handleKeyDown } from "@/utilities/handleKeyDown";
+// import location from "@/data/location";
+// import { handleKeyDown } from "@/utilities/handleKeyDown";
 
 interface Graph {
   [key: string]: {
@@ -186,7 +186,8 @@ export default function MapPage() {
   useEffect(() => {
     console.log(currentLocation);
     console.log('destination', destination);
-  }, [currentLocation, destination]);
+    console.log(distance)
+  }, [currentLocation, destination, distance]);
 
   return (
     <div className="map-page flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-[130px] pb-8">

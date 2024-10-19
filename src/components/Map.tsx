@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -8,6 +8,7 @@ import {
   Polyline,
 } from "react-leaflet";
 import L from "leaflet";
+import axios from "axios";
 
 // Importing leaflet CSS in the component to ensure it's applied
 import "leaflet/dist/leaflet.css";
@@ -50,25 +51,105 @@ L.Icon.Default.mergeOptions({
 //   return null;
 // };
 
+const fetchRouteFromORS = async (coordinates: [number, number][]) => {
+  try {
+    const response = await axios.post(
+      "https://api.openrouteservice.org/v2/directions/foot-walking/geojson",
+      {
+        coordinates,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ORS_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 type LocationMarkerProps = {
-    startCoords: [number, number] | null
-    endCoords: [number, number] | null
-    path: string[]
-}
+  startCoords: [number, number] | null;
+  endCoords: [number, number] | null;
+  path: string[];
+};
 
-const Map = ({startCoords, endCoords, path}: LocationMarkerProps) => {
-//   const [startLocation, setStartLocation] = useState<[number, number] | null>(
-//     null
-//   );
-//   const [endLocation, setEndLocation] = useState<[number, number] | null>(null);
-//   const [selectionState, setSelectionState] = useState<"start" | "end">(
-//     "start"
-//   );
+const Map = ({ startCoords, endCoords, path }: LocationMarkerProps) => {
+  //   const [startLocation, setStartLocation] = useState<[number, number] | null>(
+  //     null
+  //   );
+  //   const [endLocation, setEndLocation] = useState<[number, number] | null>(null);
+  //   const [selectionState, setSelectionState] = useState<"start" | "end">(
+  //     "start"
+  //   );
 
-const markers = path.map((nodeName) => {
-    const coord = locationCord.find(location => location.name === nodeName)?.coordinate;
-    return coord ? L.latLng(coord[0], coord[1]) : null;
-  }).filter((coord): coord is L.LatLng => coord !== null);
+  const [route, setRoute] = useState<L.LatLng[]>([]);
+
+  // const markers = path.map((nodeName) => {
+  //   // find in the locationCord array for every location if the location name is equal to the nodeName. Remember we are mapping through. This runs for every nodeName in the path array.
+  //     const coord = locationCord.find(location => location.name === nodeName)?.coordinate;
+  //     // if the coordinate is found, return the lat and long, else return null
+  //     return coord ? L.latLng(coord[0], coord[1]) : null;
+
+  //     // filter out the nodes that are null
+  //   }).filter((coord): coord is L.LatLng => coord !== null);
+
+  useEffect(() => {
+    if (
+      startCoords &&
+      endCoords &&
+      startCoords[0] !== 0 &&
+      startCoords[1] !== 0 &&
+      endCoords[0] !== 0 &&
+      endCoords[1] !== 0 &&
+      path.length > 0
+    ) {
+      // Fetch the route when startCoords and endCoords are available
+
+      const fetchRoute = async () => {
+        const coordinates = path.map(nodeName => {
+          const coord = locationCord.find(location => location.name === nodeName)?.coordinate;
+          return coord ? [coord[1], coord[0]] : null; // Make sure to invert lat/lng
+        }).filter(coord => coord !== null) as [number, number][];
+        try {
+          
+          // const response = await axios.get(
+          //   `https://api.openrouteservice.org/v2/directions/foot-walking?api_key=${apiKey}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`
+          // );
+          // Fetching coordinates from locationCord based on path names
+      
+
+      // Call the OpenRouteService API with your coordinates
+      const routeData = await fetchRouteFromORS(coordinates);
+      if (routeData) {
+        // Extract coordinates from the GeoJSON response
+        const routeCoords = routeData.features[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
+        setRoute(routeCoords);
+      }
+          // const coordinates = await response.data.features[0].geometry
+          //   .coordinates;
+          // console.log("coordinates", coordinates);
+          // console.log(response);
+
+          // // Convert coordinates from [lng, lat] to [lat, lng] and store them as L.LatLng
+          // const routeCoords = coordinates.map((coord: [number, number]) =>
+          //   L.latLng(coord[1], coord[0])
+          // );
+          // setRoute(routeCoords);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      fetchRoute();
+    }
+  }, [startCoords, endCoords, path]);
+
   return (
     <div className="h-full">
       <MapContainer
@@ -101,7 +182,7 @@ const markers = path.map((nodeName) => {
             <Popup>End Location</Popup>
           </Marker>
         )}
-        {markers.length > 1 && <Polyline positions={markers} color="blue" />}
+        {route.length > 1 && <Polyline positions={route} color="blue" />}
         {/* <Marker position={[6.515, 3.386]}>
           <Popup>
             University of Lagos <br /> Main Campus.
