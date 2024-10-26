@@ -1,9 +1,8 @@
 "use client";
-
-import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 import locationCord from "@/data/locationCoord";
 import axios from "axios";
+import dynamic from "next/dynamic";
 // import location from "@/data/location";
 // import { handleKeyDown } from "@/utilities/handleKeyDown";
 
@@ -54,6 +53,7 @@ const fetchRouteFromORS = async (coordinates: [number, number][]) => {
   }
 };
 
+const MapComponent = dynamic(() => import("@/components/Map"), { ssr: false });
 
 
 export default function MapPage() {
@@ -141,7 +141,7 @@ export default function MapPage() {
   const graph = constructGraph(locationCord);
   
 
-  const reconstructPath = useCallback((prev: { [key: string]: string | null }, start: string, destination: string) => {
+  const reconstructPath = useCallback((prev: { [key: string]: string | null }, destination: string) => {
     const path = [];
     let currentNode: string | null = destination;
   
@@ -160,7 +160,7 @@ export default function MapPage() {
     const result = dijkstra(graph, currentLocation.name);
 
     const { prev } = result;
-    const constructedPath = reconstructPath(prev, currentLocation.name, destination.name);
+    const constructedPath = reconstructPath(prev, destination.name);
 
     // Set the path and the total distance
     setPath(constructedPath);
@@ -328,7 +328,7 @@ export default function MapPage() {
 
       {/* Map Section */}
       <div className="w-[36rem] md:w-[90%] h-96 rounded-lg">
-        <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } route={route} />
+        <MapComponent startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } route={route} />
       </div>
 
       {
