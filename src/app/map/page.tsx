@@ -3,6 +3,7 @@
 import Map from "@/components/Map";
 import { useCallback, useEffect, useState } from "react";
 import locationCord from "@/data/locationCoord";
+import axios from "axios";
 // import location from "@/data/location";
 // import { handleKeyDown } from "@/utilities/handleKeyDown";
 
@@ -30,6 +31,28 @@ class PriorityQueue {
 }
 
 
+const fetchRouteFromORS = async (coordinates: [number, number][]) => {
+  try {
+    const response = await axios.post(
+      "https://api.openrouteservice.org/v2/directions/foot-walking/geojson",
+      {
+        coordinates,
+        instructions: true,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_ORS_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(response.data.features[0].properties.segments[0]);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
 
 
 
@@ -49,7 +72,11 @@ export default function MapPage() {
   >([]);
 
   const [path, setPath] = useState<string[]>([]); // This path state holds the nodes in the shortest path.
-  const [distance, setDistance] = useState<number | null>(null); // This distance state holds the total distance of the shortest path.
+  // const [distance, setDistance] = useState<number | null>(null); // This distance state holds the total distance of the shortest path.
+  const [route, setRoute] = useState<L.LatLng[]>([]);
+  const [routeInstructions, setRouteInstructions] = useState([]);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
 
   const handleInput = (value: string, setType: "current" | "destination") => {
     const filteredSuggestions = locationCord.filter((location) =>
@@ -91,6 +118,29 @@ export default function MapPage() {
     return R * c; // Distance in meters
   },[toRadians]);
 
+
+  const constructGraph = (locations: typeof locationCord) => {
+    const graph: Graph = {};
+  
+    for (let i = 0; i < locations.length; i++) {
+      const locA = locations[i];
+      graph[locA.name] = {};
+  
+      for (let j = 0; j < locations.length; j++) {
+        if (i !== j && locations[j].coordinate.length === 2 && locA.coordinate.length === 2) {
+          const locB = locations[j];
+          const distance = haversineDistance([locA.coordinate[0], locA.coordinate[1]], [locB.coordinate[0], locB.coordinate[1]]);
+          graph[locA.name][locB.name] = distance;
+        }
+      }
+    }
+  
+    return graph;
+  };
+  
+  const graph = constructGraph(locationCord);
+  
+
   const reconstructPath = useCallback((prev: { [key: string]: string | null }, start: string, destination: string) => {
     const path = [];
     let currentNode: string | null = destination;
@@ -107,16 +157,13 @@ export default function MapPage() {
   const findRoute = () => {
     if (!currentLocation.name || !destination.name) return;
 
-    const result = dijkstra(unilagGraph, currentLocation.name);
-    const { distances, prev } = result;
+    const result = dijkstra(graph, currentLocation.name);
+
+    const { prev } = result;
     const constructedPath = reconstructPath(prev, currentLocation.name, destination.name);
 
     // Set the path and the total distance
     setPath(constructedPath);
-  console.log("result form dijstra", result);
-  console.log("current location", currentLocation);
-    console.log(constructedPath);
-    setDistance(distances[destination.name]);
   };
 
   const dijkstra = (graph: Graph, startNode: string) => {
@@ -150,44 +197,51 @@ export default function MapPage() {
   };
 
 
-  const unilagGraph: Graph = {
-    "Unilag First gate": {
-      "Faculty of Education": haversineDistance([6.518014936063271, 3.384798992138069], [6.51771772897192, 3.385542526211888]),
-      "Gate Carpark": haversineDistance([6.518014936063271, 3.384798992138069], [6.518113403528685, 3.3865495321438734])
-    },
-    "Faculty of Education": {
-      "Unilag First gate": haversineDistance([6.51771772897192, 3.385542526211888], [6.518014936063271, 3.384798992138069]),
-      "Faculty of Environmental Science": haversineDistance([6.51771772897192, 3.385542526211888], [6.51771772897192, 3.385542526211888]),
-      "El kanemi Hall": haversineDistance([6.51771772897192, 3.385542526211888], [6.516587189550492, 3.3843879197731037]),
-    },
-    "Faculty of Environmental Science": {
-      "Unilag First gate": haversineDistance([6.51771772897192, 3.385542526211888], [6.518014936063271, 3.384798992138069]),
-      "Sport Center": haversineDistance([6.51771772897192, 3.385542526211888], [6.517601770612466, 3.3866594628360507]),
-      "Faculty of Engineering": haversineDistance([6.51771772897192, 3.385542526211888], [6.5192100558079025, 3.399575844402204]),
-    },
-    "Faculty of Engineering": {
-      "Faculty of Science": haversineDistance([6.5192100558079025, 3.399575844402204], [6.5163106738877365, 3.3995329290560568]),
-      "Main Auditorium": haversineDistance([6.5192100558079025, 3.399575844402204], [6.517, 3.387]),
-      "Faculty of Environmental Science": haversineDistance([6.5192100558079025, 3.399575844402204], [6.51771772897192, 3.385542526211888]),
-    },
-    "Faculty of Science": {
-      "Faculty of Engineering": haversineDistance(
-        [6.5163106738877365, 3.3995329290560568],
-        [6.5192100558079025, 3.399575844402204]
-      ),
-      "Senate Building": haversineDistance([6.5163106738877365, 3.3995329290560568], [6.520434202856529, 3.3989086167980047]),
-    },
-    // Continue defining other landmarks...
-  };
-
-  const result = dijkstra(unilagGraph, "Faculty of Engineering");
-  console.log(result);
-
   useEffect(() => {
-    console.log(currentLocation);
-    console.log('destination', destination);
-    console.log(distance)
-  }, [currentLocation, destination, distance]);
+    if (
+      currentLocation &&
+      destination &&
+      currentLocation.coordinate[0] !== 0 &&
+      currentLocation.coordinate[1] !== 0 &&
+      destination.coordinate[0] !== 0 &&
+      destination.coordinate[1] !== 0 &&
+      path.length > 0
+    ) {
+      // Fetch the route when startCoords and endCoords are available
+
+      const fetchRoute = async () => {
+        const coordinates = path
+          .map((nodeName) => {
+            const coord = locationCord.find(
+              (location) => location.name === nodeName
+            )?.coordinate;
+            return coord ? [coord[1], coord[0]] : null; // Make sure to invert lat/lng
+          })
+          .filter((coord) => coord !== null) as [number, number][];
+        try {
+        
+          const routeData = await fetchRouteFromORS(coordinates);
+          if (routeData) {
+            // Extract coordinates from the GeoJSON response
+            const routeCoords = routeData.features[0].geometry.coordinates.map(
+              (coord: [number, number]) => [coord[1], coord[0]]
+            );
+            setRoute(routeCoords);
+            setRouteInstructions(routeData.features[0].properties.segments[0].steps);
+            setDistance(routeData.features[0].properties.segments[0].distance);
+            setDuration(routeData.features[0].properties.segments[0].duration);
+          }
+          
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      fetchRoute();
+    }
+  }, [currentLocation, destination, path]);
+
+
 
   return (
     <div className="map-page flex flex-col items-center justify-center min-h-screen bg-gray-100 pt-[130px] pb-8">
@@ -273,9 +327,26 @@ export default function MapPage() {
       </div>
 
       {/* Map Section */}
-      <div className="w-[90%] max-w-xl h-96 rounded-lg">
-        <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } path={path} />
+      <div className="w-[90%] h-96 rounded-lg">
+        <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } route={route} />
       </div>
+
+      {
+        routeInstructions && routeInstructions.length > 0 && (
+          <div className="h-96 w-96 mt-4 bg-white py-3 px-5 overflow-y-scroll">
+            <h2 className="text-xl font-semibold mb-2 text-black">Route Instructions</h2>
+            <h4 className=" text-lg text-black ">Total distance: {distance}</h4>
+            <h4 className=" text-lg text-black ">Total duration: {duration}</h4>
+            <ul className="h-full">
+              {routeInstructions.map((instruction: {distance: number, duration:number, type: number, instruction: string, name: string}, index: number) => (
+                <li key={index} className="mb-2">
+                  <p className="text-gray-800">{instruction.name.length !== 1 && (<span>At {instruction.name}</span>)} {instruction.instruction} - {instruction.distance}</p>
+                </li>
+              ))}
+            </ul>
+            </div>
+        )
+      }
     </div>
   );
 }
