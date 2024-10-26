@@ -327,13 +327,13 @@ export default function MapPage() {
       </div>
 
       {/* Map Section */}
-      <div className="w-[90%] h-96 rounded-lg">
+      <div className="w-[36rem] md:w-[90%] h-96 rounded-lg">
         <Map startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } route={route} />
       </div>
 
       {
         routeInstructions && routeInstructions.length > 0 && (
-          <div className="h-96 w-96 mt-4 bg-white py-3 px-5 overflow-y-scroll">
+          <div className="h-96 w-[36rem] md:w-96 mt-4 bg-white py-3 px-5 overflow-y-scroll">
             <h2 className="text-xl font-semibold mb-2 text-black">Route Instructions</h2>
             <h4 className=" text-lg text-black ">Total distance: {distance}</h4>
             <h4 className=" text-lg text-black ">Total duration: {duration}</h4>
