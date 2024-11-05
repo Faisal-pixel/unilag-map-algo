@@ -1,10 +1,10 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import locationCord from "@/data/locationCoord";
 import axios from "axios";
 import dynamic from "next/dynamic";
 // import location from "@/data/location";
-// import { handleKeyDown } from "@/utilities/handleKeyDown";
+import { handleKeyDown } from "@/utilities/handleKeyDown";
 
 interface Graph {
   [key: string]: {
@@ -70,6 +70,7 @@ export default function MapPage() {
   const [destinationSuggestions, setDestinationSuggestions] = useState<
     string[]
   >([]);
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null)
 
   const [path, setPath] = useState<string[]>([]); // This path state holds the nodes in the shortest path.
   // const [distance, setDistance] = useState<number | null>(null); // This distance state holds the total distance of the shortest path.
@@ -78,6 +79,10 @@ export default function MapPage() {
   const [distance, setDistance] = useState<number | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
 
+
+  const currentInputRef = useRef<HTMLInputElement | null>(null)
+  const destinationInputRef = useRef<HTMLInputElement | null>(null)
+
   const handleInput = (value: string, setType: "current" | "destination") => {
     const filteredSuggestions = locationCord.filter((location) =>
       location.name.toLowerCase().includes(value.toLowerCase())
@@ -85,14 +90,29 @@ export default function MapPage() {
 
     if (setType === "current") {
       setCurrentLocation({ name: value, coordinate: [0, 0] });
-      setCurrentSuggestions(filteredSuggestions.map(loc => loc.name));
+      setCurrentSuggestions(value ? filteredSuggestions.map((loc) => loc.name) : []);
       setDestinationSuggestions([]);
     } else {
       setDestination({ name: value, coordinate: [0, 0] });
-      setDestinationSuggestions(filteredSuggestions.map(loc => loc.name));
+      setDestinationSuggestions(value ? filteredSuggestions.map((loc) => loc.name) : []);
       setCurrentSuggestions([]);
     }
   };
+
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (
+      currentInputRef.current && !currentInputRef.current.contains(event.target as Node) &&
+      destinationInputRef.current && !destinationInputRef.current.contains(event.target as Node)
+    ) {
+      setCurrentSuggestions([])
+      setDestinationSuggestions([])
+    }
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [handleClickOutside])
 
 
   const toRadians = useCallback((degrees: number): number => degrees * (Math.PI / 180), []);
@@ -256,7 +276,23 @@ export default function MapPage() {
             className="w-full p-2 text-orange-400 rounded border border-gray-500"
             placeholder="Enter your current location"
             value={currentLocation.name}
+            ref = {currentInputRef}
             onChange={(e) => handleInput(e.target.value, "current")}
+            onKeyDown={(e) =>
+              handleKeyDown(
+                e,
+                "current",
+                currentSuggestions,
+                destinationSuggestions,
+                highlightedIndex,
+                setHighlightedIndex,
+                setCurrentLocation,
+                setDestination,
+                setCurrentSuggestions,
+                setDestinationSuggestions
+              )
+            }
+
           />
 
           {currentLocation && currentSuggestions.length > 0 && (
@@ -264,6 +300,15 @@ export default function MapPage() {
               {currentSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
+                  ref={(el) => {
+                    if (highlightedIndex === index && el) {
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      });
+                    }
+                  }}
+
                   onClick={() => {
                     const selectedLocation = locationCord.find(
                       (loc) => loc.name === suggestion
@@ -276,7 +321,7 @@ export default function MapPage() {
                       setCurrentSuggestions([]);
                     }
                   }}
-                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  className={`p-2 hover:bg-gray-200 cursor-pointer ${highlightedIndex === index ? "bg-gray-300" : ""}`}
                 >
                   {suggestion}
                 </li>
@@ -292,7 +337,22 @@ export default function MapPage() {
             className="w-full p-2 rounded border text-orange-400 border-gray-500"
             placeholder="Enter your destination"
             value={destination.name}
+            ref = {destinationInputRef}
             onChange={(e) => handleInput(e.target.value, "destination")}
+            onKeyDown={(e) =>
+              handleKeyDown(
+                e,
+                "destination",
+                currentSuggestions,
+                destinationSuggestions,
+                highlightedIndex,
+                setHighlightedIndex,
+                setCurrentLocation,
+                setDestination,
+                setCurrentSuggestions,
+                setDestinationSuggestions
+              )
+            }
           />
 
           {destination && destinationSuggestions.length > 0 && (
@@ -300,6 +360,14 @@ export default function MapPage() {
               {destinationSuggestions.map((suggestion, index) => (
                 <li
                   key={index}
+                  ref={(el) => {
+                    if (highlightedIndex === index && el) {
+                      el.scrollIntoView({
+                        behavior: "smooth",
+                        block: "nearest",
+                      });
+                    }
+                  }}
                   onClick={() => {
                     const selectedLocation = locationCord.find(
                       (loc) => loc.name === suggestion
@@ -312,7 +380,7 @@ export default function MapPage() {
                       setDestinationSuggestions([])
                     }
                   }}
-                  className="p-2 hover:bg-gray-200 cursor-pointer"
+                  className={`p-2 hover:bg-gray-200 cursor-pointer ${highlightedIndex === index ? "bg-gray-300" : ""}`}
                 >
                   {suggestion}
                 </li>
@@ -327,7 +395,7 @@ export default function MapPage() {
       </div>
 
       {/* Map Section */}
-      <div className="w-[36rem] md:w-[90%] h-96 rounded-lg">
+      <div className="w-[90%] max-w-xl h-96 rounded-lg mt-20">
         <MapComponent startCoords={[currentLocation.coordinate[0], currentLocation.coordinate[1]]} endCoords={ [destination.coordinate[0], destination.coordinate[1]] } route={route} />
       </div>
 
